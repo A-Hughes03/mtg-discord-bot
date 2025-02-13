@@ -16,20 +16,24 @@ export async function execute(interaction, client) {
 
     const cardName = interaction.options.getString("cardname");
     const cardData = await searchCard(cardName);
+
     console.log(cardData);
     if (cardData.object === "error") {
         await interaction.editReply(`No card found with the name ${cardName}`);
         return;
     }
+    const legalFormats = Object.entries(cardData.legalities)
+        .filter(([format, legality]) => legality === "legal")
+        .map(([format]) => format)
+        .join(", ");
 
     const cardEmbed = new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle(cardData.name)
-        .setDescription(cardData.oracle_text)
         .setThumbnail(client.user.displayAvatarURL())
         .addFields(
-            { name: "Mana Cost", value: cardData.mana_cost, inline: true },
-            { name: "Type", value: cardData.type_line, inline: true }
+            { name: "Scryfall Nonfoil Price:", value: cardData.prices.usd},
+            { name: "Legal Formats:", value: legalFormats },
         )
         .setImage(cardData.image_uris.normal);
 
