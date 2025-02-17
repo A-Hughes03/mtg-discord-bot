@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { searchCard } from "../../services/scryfallService.js";
+import { createCardEmbed } from "../../helpers/embedHelper.js";
 
 export const data = new SlashCommandBuilder()
     .setName("searchcard")
@@ -17,7 +18,6 @@ export async function execute(interaction, client) {
     const cardName = interaction.options.getString("cardname");
     const cardData = await searchCard(cardName);
 
-    console.log(cardData);
     if (cardData.object === "error") {
         await interaction.editReply(`No card found with the name ${cardName}`);
         return;
@@ -27,15 +27,6 @@ export async function execute(interaction, client) {
         .map(([format]) => format)
         .join(", ");
 
-    const cardEmbed = new EmbedBuilder()
-        .setColor(0x0099ff)
-        .setTitle(cardData.name)
-        .setThumbnail(client.user.displayAvatarURL())
-        .addFields(
-            { name: "Scryfall Nonfoil Price:", value: cardData.prices.usd},
-            { name: "Legal Formats:", value: legalFormats },
-        )
-        .setImage(cardData.image_uris.normal);
-
+    const cardEmbed = createCardEmbed(cardData, client);
     await interaction.editReply({ embeds: [cardEmbed] });
 }

@@ -9,3 +9,11 @@ export const randomCard = async () => {
     const data = await response.json();
     return data;
 }
+
+export const parseCardNameFromMessage = (message) => {
+    const cardNames = message.match(/\[(.*?)\]/g);
+    if (cardNames) {
+        return cardNames.map(cardName => cardName.replace(/\[|\]/g, ''));
+    }
+    return null;
+}

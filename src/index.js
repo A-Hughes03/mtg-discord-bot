@@ -2,6 +2,8 @@ import { Client, Collection, MessageFlags, Events, GatewayIntentBits } from 'dis
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { parseCardNameFromMessage, searchCard } from './services/scryfallService.js';
+import { createCardEmbed } from './helpers/embedHelper.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -40,7 +42,18 @@ client.once(Events.ClientReady, async (readyClient) => {
 });
 
 client.on(Events.MessageCreate, async (message) => {
-  console.log(`${message.author.tag} said: ${message.content}`);
+  const cardNames = parseCardNameFromMessage(message.content);
+  if (cardNames) {
+    for (const cardName of cardNames) {
+      const cardData = await searchCard(cardName);
+      if (cardData.object === 'error') {
+        message.channel.send(`No card found with the name ${cardName}`);
+      } else {
+        const cardEmbed = createCardEmbed(cardData, client);
+        message.channel.send({ embeds: [cardEmbed] });
+      }
+    }
+  }
 });
 
 client.on(Events.InteractionCreate, async interaction => {
